@@ -45,6 +45,7 @@ $ CGO_ENABLED=0 go build main.go -p csp-collector
 | debug                   | Runs in debug mode producing more verbose output                                                                                                                                                  |
 | port                    | Port to run on, default 8080                                                                                                                                                                      |
 | filter-file             | Reads the blocked URI filter list from the specified file. Note one filter per line                                                                                                               |
+| filter-domains-file     | Reads the blocked Domains filter list from the specified file. Note one domain per line                                                                                                               |
 | health-check-path       | Sets path for health checkers to use, default \/\_healthcheck                                                                                                                                     |
 | log-client-ip           | Include a field in the log with the IP delivering the report, or the value of the `X-Forwarded-For` header, if present.                                                                           |
 | log-truncated-client-ip | Include a field in the log with the truncated IP (to /24 for IPv4, /64 for IPv6) delivering the report, or the value of the `X-Forwarded-For` header, if present. Conflicts with `log-client-ip`. |
@@ -52,6 +53,7 @@ $ CGO_ENABLED=0 go build main.go -p csp-collector
 | query-params-metadata   | Log all query parameters of the report URL as a map in the `metadata` field                                                                                                                       |
 
 See the `sample.filterlist.txt` file as an example of the filter list in a file
+See the `sample.filterdomains.txt` file as an example of the filter list in a file
 
 ### Request metadata
 
