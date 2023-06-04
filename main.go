@@ -47,6 +47,7 @@ func main() {
 	debugFlag := flag.Bool("debug", false, "Output additional logging for debugging")
 	outputFormat := flag.String("output-format", "text", "Define how the violation reports are formatted for output.\nDefaults to 'text'. Valid options are 'text' or 'json'")
 	blockedURIFile := flag.String("filter-file", "", "Blocked URI Filter file")
+	blockedDomainsFile := flag.String("filter-domains-file", "", "Blocked Domains Filter file")
 	listenPort := flag.Int("port", 8080, "Port to listen on")
 	healthCheckPath := flag.String("health-check-path", defaultHealthCheckPath, "Health checker path")
 	truncateQueryStringFragment := flag.Bool("truncate-query-fragment", false, "Truncate query string and fragment from document-uri, referrer and blocked-uri before logging (to reduce chances of accidentally logging sensitive data)")
@@ -95,11 +96,27 @@ func main() {
 		logger.Debug("using filter list from internal list")
 	}
 
+	ignoredBlockedDomains := utils.DefaultIgnoredBlockedDomains
+	if *blockedDomainsFile != "" {
+		logger.Debugf("using Domains Filter list from file at: %s\n", *blockedDomainsFile)
+
+		content2, err2 := os.ReadFile(*blockedDomainsFile)
+		if err2 != nil {
+			log.Fatalf("error reading Blocked File list: %s", *blockedDomainsFile)
+		}
+		ignoredBlockedDomains = utils.TrimEmptyAndComments(strings.Split(string(content2), "\n"))
+	} else {
+		logger.Debug("using filter list from internal list")
+	}
+
+
+
 	r := mux.NewRouter()
 	r.HandleFunc(*healthCheckPath, handler.HealthcheckHandler).Methods("GET")
 
 	r.Handle("/csp/report-only", &handler.CSPViolationReportHandler{
 		BlockedURIs:                 ignoredBlockedURIs,
+		BlockedDomains:              ignoredBlockedDomains,
 		TruncateQueryStringFragment: *truncateQueryStringFragment,
 
 		LogClientIP:          *logClientIP,
@@ -111,6 +128,7 @@ func main() {
 
 	r.Handle("/csp", &handler.CSPViolationReportHandler{
 		BlockedURIs:                 ignoredBlockedURIs,
+		BlockedDomains:              ignoredBlockedDomains,
 		TruncateQueryStringFragment: *truncateQueryStringFragment,
 
 		LogClientIP:          *logClientIP,
@@ -122,6 +140,7 @@ func main() {
 
 	r.Handle("/", &handler.CSPViolationReportHandler{
 		BlockedURIs:                 ignoredBlockedURIs,
+		BlockedDomains:              ignoredBlockedDomains,
 		TruncateQueryStringFragment: *truncateQueryStringFragment,
 
 		LogClientIP:          *logClientIP,
@@ -134,6 +153,7 @@ func main() {
 	r.NotFoundHandler = r.NewRoute().HandlerFunc(http.NotFound).GetHandler()
 
 	logger.Debugf("blocked URI list: %s", ignoredBlockedURIs)
+	logger.Debugf("blocked Domains list: %s", ignoredBlockedDomains)
 	logger.Debugf("listening on TCP port: %s", strconv.Itoa(*listenPort))
 
 	logger.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", strconv.Itoa(*listenPort)), r))

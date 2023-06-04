@@ -33,6 +33,7 @@ type CSPViolationReportHandler struct {
 	ReportOnly                  bool
 	TruncateQueryStringFragment bool
 	BlockedURIs                 []string
+	BlockedDomains              []string
 
 	LogClientIP          bool
 	LogTruncatedClientIP bool
@@ -127,6 +128,13 @@ func (vrh *CSPViolationReportHandler) validateViolation(r CSPReport) error {
 	for _, value := range vrh.BlockedURIs {
 		if strings.HasPrefix(r.Body.BlockedURI, value) {
 			err := fmt.Errorf("blocked URI ('%s') is an invalid resource", value)
+			return err
+		}
+	}
+
+	for _, domain := range vrh.BlockedDomains {
+		if strings.HasSuffix(utils.GetURIDomain(r.Body.BlockedURI), domain) {
+			err := fmt.Errorf("blocked domain ('%s') is an invalid resource", domain)
 			return err
 		}
 	}

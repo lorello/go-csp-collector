@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"net/url"
 	"strings"
 )
 
@@ -64,3 +65,15 @@ func GetClientIP(r *http.Request) (netip.Addr, error) {
 
 	return addrp.Addr(), nil
 }
+
+func GetURIDomain(uri string) string {
+
+	url, err := url.Parse(uri)
+    if err != nil {
+        return uri
+		// should I return an error?
+		//log.Fatal(err)
+    }
+	return url.Hostname()
+}
+
